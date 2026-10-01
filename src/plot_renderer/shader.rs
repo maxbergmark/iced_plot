@@ -1674,6 +1674,17 @@ impl PlotRenderer {
         let width = self.bounds.width * self.scale_factor;
         let height = self.bounds.height * self.scale_factor;
 
+        let sx = params.clip_bounds.x.saturating_sub(x as u32);
+        let sy = params.clip_bounds.y.saturating_sub(y as u32);
+        let sw = params
+            .clip_bounds
+            .width
+            .min(msaa_targets.width.saturating_sub(sx));
+        let sh = params
+            .clip_bounds
+            .height
+            .min(msaa_targets.height.saturating_sub(sy));
+
         // Main pass (grid, lines, markers)
         {
             let mut pass = params.encoder.begin_render_pass(&RenderPassDescriptor {
@@ -1686,17 +1697,6 @@ impl PlotRenderer {
                 occlusion_query_set: None,
                 timestamp_writes: None,
             });
-
-            let sx = params.clip_bounds.x.saturating_sub(x as u32);
-            let sy = params.clip_bounds.y.saturating_sub(y as u32);
-            let sw = params
-                .clip_bounds
-                .width
-                .min(msaa_targets.width.saturating_sub(sx));
-            let sh = params
-                .clip_bounds
-                .height
-                .min(msaa_targets.height.saturating_sub(sy));
 
             // Set viewport and scissor to respect bounds
             pass.set_viewport(0.0, 0.0, width, height, 0.0, 1.0);
