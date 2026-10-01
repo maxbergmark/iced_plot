@@ -568,7 +568,7 @@ impl PlotRenderer {
         let scale_factor = viewport.scale_factor();
         let bounds_width = (bounds.width * scale_factor) as u32;
         let bounds_height = (bounds.height * scale_factor) as u32;
-        let viewport_size = viewport.physical_size();
+        // let viewport_size = viewport.physical_size();
 
         self.set_bounds(bounds_width, bounds_height);
         self.set_scale_factor(scale_factor);
@@ -576,7 +576,7 @@ impl PlotRenderer {
         // MSAA/resolve textures would only waste memory; `encode` self-guards
         // by early-returning when `msaa_targets` is `None`.
         if MSAA_SAMPLE_COUNT > 1 {
-            self.ensure_msaa_targets(device, viewport_size.width, viewport_size.height);
+            self.ensure_msaa_targets(device, bounds_width, bounds_height);
         }
 
         // Sync picking viewport
@@ -1688,10 +1688,10 @@ impl PlotRenderer {
             });
 
             // Set viewport and scissor to respect bounds
-            pass.set_viewport(x, y, width, height, 0.0, 1.0);
+            pass.set_viewport(0.0, 0.0, width, height, 0.0, 1.0);
             pass.set_scissor_rect(
-                params.clip_bounds.x,
-                params.clip_bounds.y,
+                params.clip_bounds.x.saturating_sub(x as u32),
+                params.clip_bounds.y.saturating_sub(y as u32),
                 params.clip_bounds.width,
                 params.clip_bounds.height,
             );
@@ -1759,10 +1759,10 @@ impl PlotRenderer {
             });
 
             // Set viewport and scissor for selection overlay as well
-            pass.set_viewport(x, y, width, height, 0.0, 1.0);
+            pass.set_viewport(0.0, 0.0, width, height, 0.0, 1.0);
             pass.set_scissor_rect(
-                params.clip_bounds.x,
-                params.clip_bounds.y,
+                params.clip_bounds.x.saturating_sub(x as u32),
+                params.clip_bounds.y.saturating_sub(y as u32),
                 params.clip_bounds.width,
                 params.clip_bounds.height,
             );
@@ -1799,10 +1799,10 @@ impl PlotRenderer {
             });
 
             // Set viewport and scissor for crosshairs overlay
-            pass.set_viewport(x, y, width, height, 0.0, 1.0);
+            pass.set_viewport(0.0, 0.0, width, height, 0.0, 1.0);
             pass.set_scissor_rect(
-                params.clip_bounds.x,
-                params.clip_bounds.y,
+                params.clip_bounds.x.saturating_sub(x as u32),
+                params.clip_bounds.y.saturating_sub(y as u32),
                 params.clip_bounds.width,
                 params.clip_bounds.height,
             );
@@ -1821,14 +1821,7 @@ impl PlotRenderer {
                 timestamp_writes: None,
             });
 
-            pass.set_viewport(
-                0.0,
-                0.0,
-                msaa_targets.width as f32,
-                msaa_targets.height as f32,
-                0.0,
-                1.0,
-            );
+            pass.set_viewport(x, y, width, height, 0.0, 1.0);
             pass.set_scissor_rect(
                 params.clip_bounds.x,
                 params.clip_bounds.y,
