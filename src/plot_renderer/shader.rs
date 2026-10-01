@@ -1687,14 +1687,20 @@ impl PlotRenderer {
                 timestamp_writes: None,
             });
 
+            let sx = params.clip_bounds.x.saturating_sub(x as u32);
+            let sy = params.clip_bounds.y.saturating_sub(y as u32);
+            let sw = params
+                .clip_bounds
+                .width
+                .min(msaa_targets.width.saturating_sub(sx));
+            let sh = params
+                .clip_bounds
+                .height
+                .min(msaa_targets.height.saturating_sub(sy));
+
             // Set viewport and scissor to respect bounds
             pass.set_viewport(0.0, 0.0, width, height, 0.0, 1.0);
-            pass.set_scissor_rect(
-                params.clip_bounds.x.saturating_sub(x as u32),
-                params.clip_bounds.y.saturating_sub(y as u32),
-                params.clip_bounds.width,
-                params.clip_bounds.height,
-            );
+            pass.set_scissor_rect(sx, sy, sw, sh);
 
             // grid
             self.grid.draw(&mut pass, &self.camera_bind_group);
@@ -1760,12 +1766,7 @@ impl PlotRenderer {
 
             // Set viewport and scissor for selection overlay as well
             pass.set_viewport(0.0, 0.0, width, height, 0.0, 1.0);
-            pass.set_scissor_rect(
-                params.clip_bounds.x.saturating_sub(x as u32),
-                params.clip_bounds.y.saturating_sub(y as u32),
-                params.clip_bounds.width,
-                params.clip_bounds.height,
-            );
+            pass.set_scissor_rect(sx, sy, sw, sh);
 
             pass.set_pipeline(pipeline);
             // Draw selection if present
@@ -1800,12 +1801,7 @@ impl PlotRenderer {
 
             // Set viewport and scissor for crosshairs overlay
             pass.set_viewport(0.0, 0.0, width, height, 0.0, 1.0);
-            pass.set_scissor_rect(
-                params.clip_bounds.x.saturating_sub(x as u32),
-                params.clip_bounds.y.saturating_sub(y as u32),
-                params.clip_bounds.width,
-                params.clip_bounds.height,
-            );
+            pass.set_scissor_rect(sx, sy, sw, sh);
 
             pass.set_pipeline(pipeline);
             pass.set_vertex_buffer(0, vb.buffer.slice(..));
